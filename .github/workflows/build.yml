@@ -9,8 +9,9 @@ on:
 jobs:
   build-tauri:
     strategy:
+      fail-fast: false
       matrix:
-        platform: [windows-latest] # Windows環境を指定
+        platform: [macos-latest, windows-latest]
 
     runs-on: ${{ matrix.platform }}
     steps:

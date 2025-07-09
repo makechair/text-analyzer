@@ -18,13 +18,13 @@
         "resizable": true,
         "fullscreen": false
       }
-    ],
+    ],  
     "security": {
       "csp": null
     }
   },
   "bundle": {
-    "active": true,
+    "active": false,
     "targets": "all",
     "icon": [
       "icons/32x32.png",
@@ -34,4 +34,5 @@
       "icons/icon.ico"
     ]
   }
+
 }
