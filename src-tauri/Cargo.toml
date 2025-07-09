@@ -1,8 +1,8 @@
 [package]
-name = "app"
+name = "text-analyzer"
 version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
+description = "Text Analyzer"
+authors = ["ryokagehoshi"]
 license = ""
 repository = ""
 edition = "2021"
