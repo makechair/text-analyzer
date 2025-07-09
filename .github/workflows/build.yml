@@ -11,7 +11,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [macos-latest, windows-latest]
+        include:
+          - platform: macos-latest
+            arch: x86_64
+          - platform: ubuntu-latest
+            arch: x86_64
+          - platform: windows-latest
+            arch: x64 # 64bit版
+            rust_target: x86_64-pc-windows-msvc
+          - platform: windows-latest
+            arch: x86 # 32bit版
+            rust_target: i686-pc-windows-msvc
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -26,18 +36,21 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Install 32-bit Rust target for Windows
+        if: matrix.rust_target == 'i686-pc-windows-msvc'
+        run: rustup target add i686-pc-windows-msvc
+
       - name: Install dependencies (npm)
         run: npm install
 
+      # Windowsビルドの場合のみ、--targetフラグを付けて実行
+      - name: Build Tauri application
+        run: npx tauri build --target ${{ matrix.rust_target }}
+        if: matrix.platform == 'windows-latest'
+
       - name: Build Tauri application
         run: npx tauri build
-
-      - name: Upload Windows Artifact (EXE)
-        if: matrix.platform == 'windows-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: windows-executable
-          path: src-tauri/target/release/bundle/nsis/*.exe
+        if: matrix.platform != 'windows-latest'
 
       - name: Upload macOS Artifact (APP Bundle)
         if: matrix.platform == 'macos-latest'
@@ -45,3 +58,13 @@ jobs:
         with:
           name: macos-application
           path: src-tauri/target/release/bundle/macos/*.app
+
+      - name: Upload Windows Artifact (EXE)
+        if: matrix.platform == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          # OSとアーキテクチャで分かりやすい名前を付ける
+          name: bundle-${{ matrix.platform }}-${{ matrix.arch }}
+          # ビルド成果物のパスも、ターゲットごとに変わるため修正
+          path: src-tauri/target/${{ matrix.rust_target || 'release' }}/bundle/  
+  
