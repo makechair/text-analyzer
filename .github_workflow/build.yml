@@ -1,0 +1,38 @@
+name: Build Tauri App
+
+on:
+  push:
+    branches: [ "main" ] # mainブランチにプッシュされた時に実行
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-tauri:
+    strategy:
+      matrix:
+        platform: [windows-latest] # Windows環境を指定
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20 # プロジェクトに合わせたバージョンを指定
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install dependencies (npm)
+        run: npm install
+
+      - name: Build Tauri application
+        run: npx tauri build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tauri-build-${{ matrix.platform }}
+          path: src-tauri/target/release/bundle/

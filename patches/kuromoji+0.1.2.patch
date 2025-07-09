@@ -1,0 +1,69 @@
+diff --git a/node_modules/kuromoji/src/loader/BrowserDictionaryLoader.js b/node_modules/kuromoji/src/loader/BrowserDictionaryLoader.js
+index 04bfdcd..bebf8f2 100644
+--- a/node_modules/kuromoji/src/loader/BrowserDictionaryLoader.js
++++ b/node_modules/kuromoji/src/loader/BrowserDictionaryLoader.js
+@@ -17,7 +17,6 @@
+ 
+ "use strict";
+ 
+-var zlib = require("zlibjs/bin/gunzip.min.js");
+ var DictionaryLoader = require("./DictionaryLoader");
+ 
+ /**
+@@ -47,10 +46,12 @@ BrowserDictionaryLoader.prototype.loadArrayBuffer = function (url, callback) {
+         }
+         var arraybuffer = this.response;
+ 
+-        var gz = new zlib.Zlib.Gunzip(new Uint8Array(arraybuffer));
+-        var typed_array = gz.decompress();
+-        callback(null, typed_array.buffer);
+-    };
++        const ds = new DecompressionStream("gzip");
++        const blob = new Blob([arraybuffer]);
++        const decompressedStream = blob.stream().pipeThrough(ds);
++        new Response(decompressedStream).arrayBuffer().then(buffer => {
++           callback(null, buffer);
++        });    };
+     xhr.onerror = function (err) {
+         callback(err, null);
+     };
+diff --git a/node_modules/kuromoji/src/loader/DictionaryLoader.js b/node_modules/kuromoji/src/loader/DictionaryLoader.js
+index 5f88c0b..ed69460 100644
+--- a/node_modules/kuromoji/src/loader/DictionaryLoader.js
++++ b/node_modules/kuromoji/src/loader/DictionaryLoader.js
+@@ -47,7 +47,7 @@ DictionaryLoader.prototype.load = function (load_callback) {
+     async.parallel([
+         // Trie
+         function (callback) {
+-            async.map([ "base.dat.gz", "check.dat.gz" ], function (filename, _callback) {
++            async.map([ "base.dat.gzip", "check.dat.gzip" ], function (filename, _callback) {
+                 loadArrayBuffer(path.join(dic_path, filename), function (err, buffer) {
+                     if(err) {
+                         return _callback(err);
+@@ -67,7 +67,7 @@ DictionaryLoader.prototype.load = function (load_callback) {
+         },
+         // Token info dictionaries
+         function (callback) {
+-            async.map([ "tid.dat.gz", "tid_pos.dat.gz", "tid_map.dat.gz" ], function (filename, _callback) {
++            async.map([ "tid.dat.gzip", "tid_pos.dat.gzip", "tid_map.dat.gzip" ], function (filename, _callback) {
+                 loadArrayBuffer(path.join(dic_path, filename), function (err, buffer) {
+                     if(err) {
+                         return _callback(err);
+@@ -88,7 +88,7 @@ DictionaryLoader.prototype.load = function (load_callback) {
+         },
+         // Connection cost matrix
+         function (callback) {
+-            loadArrayBuffer(path.join(dic_path, "cc.dat.gz"), function (err, buffer) {
++            loadArrayBuffer(path.join(dic_path, "cc.dat.gzip"), function (err, buffer) {
+                 if(err) {
+                     return callback(err);
+                 }
+@@ -99,7 +99,7 @@ DictionaryLoader.prototype.load = function (load_callback) {
+         },
+         // Unknown dictionaries
+         function (callback) {
+-            async.map([ "unk.dat.gz", "unk_pos.dat.gz", "unk_map.dat.gz", "unk_char.dat.gz", "unk_compat.dat.gz", "unk_invoke.dat.gz" ], function (filename, _callback) {
++            async.map([ "unk.dat.gzip", "unk_pos.dat.gzip", "unk_map.dat.gzip", "unk_char.dat.gzip", "unk_compat.dat.gzip", "unk_invoke.dat.gzip" ], function (filename, _callback) {
+                 loadArrayBuffer(path.join(dic_path, filename), function (err, buffer) {
+                     if(err) {
+                         return _callback(err);
