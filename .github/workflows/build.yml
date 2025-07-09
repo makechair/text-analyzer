@@ -63,5 +63,5 @@ jobs:
         with:
           name: bundle-${{ matrix.platform }}-${{ matrix.arch }}
           # ターゲット指定ビルドの場合、releaseフォルダがターゲット名の配下に入る
-          path: src-tauri/target/${{ matrix.rust_target || 'release' }}/bundle/
+          path: src-tauri/target/${{ matrix.rust_target || 'release' }}/release/bundle/nsis
   
