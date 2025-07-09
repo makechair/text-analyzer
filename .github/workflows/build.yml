@@ -21,7 +21,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20 # プロジェクトに合わせたバージョンを指定
+          node-version: 20
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -36,4 +36,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: tauri-build-${{ matrix.platform }}
-          path: src-tauri/target/release/bundle/
+          path: |
+            src-tauri/target/release/文章表記揺れチェッカー.exe
+            src-tauri/target/release/文章表記揺れチェッカー.pdb
+            src-tauri/target/release/文章表記揺れチェッカー.app
+            src-tauri/target/release/文章表記揺れチェッカー.AppImage
+          if-no-files-found: ignore # いずれかのOSでファイルが見つからなくてもエラーにしない
