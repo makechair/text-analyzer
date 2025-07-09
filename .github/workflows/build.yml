@@ -14,8 +14,6 @@ jobs:
         include:
           - platform: macos-latest
             arch: x86_64
-          - platform: ubuntu-latest
-            arch: x86_64
           - platform: windows-latest
             arch: x64 # 64bit版
             rust_target: x86_64-pc-windows-msvc
