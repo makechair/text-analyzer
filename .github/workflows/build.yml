@@ -61,8 +61,7 @@ jobs:
         if: matrix.platform == 'windows-latest'
         uses: actions/upload-artifact@v4
         with:
-          # OSとアーキテクチャで分かりやすい名前を付ける
           name: bundle-${{ matrix.platform }}-${{ matrix.arch }}
-          # ビルド成果物のパスも、ターゲットごとに変わるため修正
-          path: src-tauri/target/${{ matrix.rust_target || 'release' }}/bundle/  
+          # ターゲット指定ビルドの場合、releaseフォルダがターゲット名の配下に入る
+          path: src-tauri/target/${{ matrix.rust_target || 'release' }}/bundle/
   
