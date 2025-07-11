@@ -15,6 +15,16 @@ const initializeTokenizer = () => {
   });
 };
 
+const getDisplayCategory = (token) => {
+  if (token.pos === '名詞' && token.pos_detail_1 === '固有名詞') {
+    if (token.pos_detail_2 === '人名') {
+      return '人名';
+    }
+    return '固有名詞';
+  }
+  return token.pos;
+};
+
 self.onmessage = async (e) => {
   const { type, file } = e.data;
 
@@ -38,19 +48,18 @@ self.onmessage = async (e) => {
         } else {
           throw new Error('サポートされていないファイル形式です。');
         }
-
-        // 1. 文分割のロジック
+        
         const sentencesWithMeta = [];
         const terminators = /[。？！]|\n/g;
         let lastIndex = 0;
         let match;
         
-        // 行番号計算の準備
         const lineEndPositions = [];
         text.split('\n').forEach((line, index) => {
           const lastEnd = lineEndPositions.length > 0 ? lineEndPositions[lineEndPositions.length - 1].end : -1;
           lineEndPositions.push({ line: index + 1, end: lastEnd + line.length + 1 });
         });
+
         const getLineNumber = (charPos) => {
           const lineInfo = lineEndPositions.find(l => charPos <= l.end);
           return lineInfo ? lineInfo.line : lineEndPositions.length;
@@ -70,23 +79,21 @@ self.onmessage = async (e) => {
           }
         }
 
-        // 2. 集計ロジック
         const wordsByReading = {};
-        
         sentencesWithMeta.forEach((sentence, sentenceIndex) => {
           const tokens = tokenizer.tokenize(sentence.text);
 
           tokens.forEach(token => {
-            if (!token.reading || ['助詞', '助動詞', '記号', '接続詞', '連体詞'].includes(token.pos)) {
+            if (!token.reading || ['助詞', '助動詞', '接続詞', '連体詞'].includes(token.pos)) {
               return;
             }
-            const { reading, surface_form, pos, basic_form } = token;
+            const { reading, surface_form, basic_form } = token;
 
             if (!wordsByReading[reading]) {
               wordsByReading[reading] = { totalCount: 0, variants: {}, sentenceIndices: new Set() };
             }
             if (!wordsByReading[reading].variants[surface_form]) {
-              wordsByReading[reading].variants[surface_form] = { count: 0, pos, basic_form };
+              wordsByReading[reading].variants[surface_form] = { count: 0, pos: getDisplayCategory(token), basic_form };
             }
 
             wordsByReading[reading].variants[surface_form].count++;
@@ -119,10 +126,16 @@ self.onmessage = async (e) => {
             sentenceMap[reading] = Array.from(group.sentenceIndices);
         });
         
+        const sortedFinalGroupedTokens = {};
+        Object.keys(groupedByPos).sort((a, b) => a.localeCompare(b, 'ja')).forEach(pos => {
+            groupedByPos[pos].sort((a, b) => a.reading.localeCompare(b.reading, 'ja'));
+            sortedFinalGroupedTokens[pos] = groupedByPos[pos];
+        });
+
         self.postMessage({
           type: 'PROCESS_SUCCESS',
           data: {
-            groupedTokens: groupedByPos,
+            groupedTokens: sortedFinalGroupedTokens,
             sentences: sentencesWithMeta,
             sentenceMap: sentenceMap
           },
